@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    
+    <link rel="stylesheet" href="common/css/common.css">
+    <link rel="stylesheet" href="css/reading-pacer.css">
+    <link rel="stylesheet" href="common/vendor/fontawesome/css/fontawesome.css">
+<link rel="stylesheet" href="common/vendor/fontawesome/css/solid.css">
+<title>音読ペーサー</title>
+<link rel="stylesheet" href="oss/standalone.css">
+<script defer src="oss/standalone.js"></script>
+</head>
+
+<body>
+    <button id="classModeToggle" class="class-mode-toggle">
+        <i id="classModeIcon" class="fas fa-chalkboard"></i>
+        <span id="classModeText">授業モード OFF</span>
+    </button>
+
+    <div class="site-wrapper">
+        <aside class="ad-left"><!-- Ads injected by common-ads.js --></aside>
+
+        <div class="container">
+            <header>
+                <!-- Header will be injected by common-header.js -->
+                <h1><i class="fas fa-highlighter"></i> 音読ペーサー</h1>
+                <p class="subtitle">英文の現在位置を光らせて、一斉音読の「今どこ？」をなくす</p>
+            </header>
+
+            <main>
+                <section class="input-area no-print">
+                    <h2 class="section-title"><i class="fas fa-pen-to-square"></i> 音読する英文</h2>
+                    <div class="pacer-input-layout">
+                        <div class="input-group pacer-textarea-group">
+                            <label for="textInput">英文 <span class="required">必須</span></label>
+                            <textarea id="textInput" rows="8" wrap="soft" placeholder="例：I usually get up at seven. I eat breakfast with my family. Then I go to school by bike."></textarea>
+                            <span class="help-text">英文はブラウザ内だけで処理され、サーバーへ送信されません。</span>
+                        </div>
+
+                        <div class="pacer-settings-panel">
+                            <div class="input-group">
+                                <label for="speedInput"><i class="fas fa-gauge-high"></i> 速さ（WPM）</label>
+                                <div class="speed-row">
+                                    <input type="range" id="speedSlider" min="60" max="180" step="5" value="100">
+                                    <input type="number" id="speedInput" min="60" max="180" step="5" value="100">
+                                </div>
+                                <span class="help-text">WPM = words per minute。目安：ゆっくり80 / 標準100 / 速め130</span>
+                                <div class="pace-presets" role="group" aria-label="速さプリセット">
+                                    <button type="button" class="pace-preset" data-speed="80">
+                                        <i class="fas fa-person-walking"></i>
+                                        <span>ゆっくり</span>
+                                        <strong>80</strong>
+                                    </button>
+                                    <button type="button" class="pace-preset" data-speed="100">
+                                        <i class="fas fa-person"></i>
+                                        <span>ふつう</span>
+                                        <strong>100</strong>
+                                    </button>
+                                    <button type="button" class="pace-preset" data-speed="120">
+                                        <i class="fas fa-bolt"></i>
+                                        <span>チャレンジ</span>
+                                        <strong>120</strong>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label><i class="fas fa-wand-magic-sparkles"></i> 表示方法</label>
+                                <div class="mode-options" role="radiogroup" aria-label="表示方法">
+                                    <label class="mode-option">
+                                        <input type="radio" name="displayMode" value="highlight" checked>
+                                        <span>光る</span>
+                                    </label>
+                                    <label class="mode-option">
+                                        <input type="radio" name="displayMode" value="fade">
+                                        <span>薄くなる</span>
+                                    </label>
+                                    <label class="mode-option">
+                                        <input type="radio" name="displayMode" value="vanish">
+                                        <span>消える</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="pacer-small-grid">
+                                <div class="input-group">
+                                    <label for="leadInput"><i class="fas fa-hourglass-start"></i> 開始前</label>
+                                    <select id="leadInput" class="select-input">
+                                        <option value="0">なし</option>
+                                        <option value="3" selected>3秒</option>
+                                        <option value="5">5秒</option>
+                                    </select>
+                                </div>
+                                <label class="pacer-check-option" for="pausePunctuation">
+                                    <input type="checkbox" id="pausePunctuation" checked>
+                                    <span>句読点で間を配分</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="action-bar no-print">
+                    <button class="btn btn-primary btn-large" id="prepareBtn">
+                        <i class="fas fa-file-import"></i> 英文をセット
+                    </button>
+                    <button class="btn btn-primary btn-large" id="startBtn">
+                        <i class="fas fa-play"></i> スタート
+                    </button>
+                    <button class="btn btn-warning btn-large" id="pauseBtn" hidden>
+                        <i class="fas fa-pause"></i> 一時停止
+                    </button>
+                    <button class="btn btn-secondary" id="resetBtn">
+                        <i class="fas fa-rotate-left"></i> 最初に戻す
+                    </button>
+                    <button class="btn btn-info" id="fullscreenBtn">
+                        <i class="fas fa-expand"></i> 全画面表示
+                    </button>
+                </div>
+
+                <section class="pacer-share no-print" id="shareArea" aria-label="生徒への配布">
+                    <div class="pacer-share-main">
+                        <h2 class="pacer-share-title"><i class="fas fa-paper-plane"></i> 生徒に配布</h2>
+                        <p class="pacer-share-text">入力した英文を、生徒が自分のペースで練習できるリンクにします。生徒側では英文入力欄を隠して、再生と速さ調整だけを使えます。</p>
+                    </div>
+                    <div class="pacer-share-actions">
+                        <button class="btn btn-secondary" id="makeShareBtn">
+                            <i class="fas fa-link"></i> 個人練習リンクを作成
+                        </button>
+                        <button class="btn btn-primary" id="copyShareBtn" disabled>
+                            <i class="fas fa-copy"></i> コピー
+                        </button>
+                        <button class="btn btn-info" id="nativeShareBtn" hidden>
+                            <i class="fas fa-share-nodes"></i> 共有
+                        </button>
+                    </div>
+                    <input type="text" id="shareUrlInput" class="pacer-share-url" readonly placeholder="ここに配布用URLが表示されます">
+                    <p class="pacer-share-hint" id="shareHint">
+                        長い本文はURLも長くなります。教科書本文まるごとではなく、1段落ずつ配布すると安定します。
+                    </p>
+                </section>
+
+                <div class="alert alert-error pacer-message" id="message" hidden></div>
+
+                <section class="result-area pacer-stage" id="pacerStage">
+                    <div class="pacer-stage-head">
+                        <div>
+                            <div class="pacer-state" id="pacerState">準備完了</div>
+                            <div class="pacer-substate" id="pacerSubstate">英文を入力して「英文をセット」を押してください。</div>
+                        </div>
+                        <div class="pacer-counts">
+                            <span id="wordCount">0語</span>
+                            <span id="timeEstimate">約0秒</span>
+                        </div>
+                    </div>
+
+                    <div class="pacer-progress" aria-hidden="true">
+                        <div class="pacer-progress-bar" id="progressBar"></div>
+                    </div>
+
+                    <article class="reading-text mode-highlight" id="readingText" aria-live="polite">
+                        <div class="reading-empty">
+                            <i class="fas fa-book-open-reader"></i>
+                            <p>ここに音読用の英文が大きく表示されます。</p>
+                        </div>
+                    </article>
+
+                    <div class="stage-controls no-print">
+                        <button class="stage-btn" id="stageBackBtn" aria-label="1語戻る">
+                            <i class="fas fa-backward-step"></i>
+                            <span>戻る</span>
+                        </button>
+                        <button class="stage-btn stage-start" id="stageStartBtn" aria-label="スタート">
+                            <i class="fas fa-play"></i>
+                            <span>再生</span>
+                        </button>
+                        <button class="stage-btn" id="stageForwardBtn" aria-label="1語進む">
+                            <i class="fas fa-forward-step"></i>
+                            <span>進む</span>
+                        </button>
+                    </div>
+                </section>
+
+                <div class="instructions">
+                    <h3><i class="fas fa-info-circle"></i> 使い方</h3>
+                    <ol>
+                        <li><strong>英文を入力</strong>：教科書本文や例文を貼り付けます</li>
+                        <li><strong>速さを設定</strong>：一斉音読に合わせて語/分を調整します</li>
+                        <li><strong>英文をセット</strong>：投影用の大きな英文に変換します</li>
+                        <li><strong>スタート</strong>：設定した速さで単語が順番に光ります</li>
+                        <li><strong>全画面表示</strong>：電子黒板やプロジェクターで見やすく提示できます</li>
+                        <li><strong>生徒に配布</strong>：個人練習リンクを作ると、生徒が自分の端末で速さを選んで練習できます</li>
+                    </ol>
+                    <p class="note"><i class="fas fa-lightbulb"></i>
+                        <strong>ヒント</strong>：生徒が追いつきにくいときは80〜90WPM、慣れてきたら110WPM前後がおすすめです。句読点の間は、全体のWPMを保ったまま配分されます。
+                    </p>
+                </div>
+            </main>
+
+            <div class="ad-horizontal no-print">
+                <div class="ad-label">広告</div>
+                <div class="ad-horizontal-content">
+                    <i class="fas fa-rectangle-ad"></i>
+                    <p>728×90 レクタングル（大）バナー広告</p>
+                </div>
+            </div>
+
+            <footer><!-- Footer will be injected by common-footer.js --></footer>
+        </div>
+
+        <aside class="ad-right"><!-- Ads injected by common-ads.js --></aside>
+    </div>
+
+    <script src="common/js/class-mode.js"></script>
+    
+    
+    
+    
+    
+    <script type="module" src="dist/reading-pacer.js"></script>
+</body>
+
+</html>
